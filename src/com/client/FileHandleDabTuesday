@@ -1,0 +1,110 @@
+package com.client;
+import com.chunkserver.ChunkServer;
+//The version of file handle as of Tuesday April 12th
+public class FileHandleDabTuesday {
+	static final int chunkSize = ChunkServer.ChunkSize;
+	private int lastChunkBytesUsed;
+	private int lastChunkNumRecords;
+	private String lastChunkHandle;
+	private String myPath;
+	private RID firstRID;
+	private RID lastRID;
+	//RID currentRID;
+	Client client;
+	public FileHandleDabTuesday(){
+		myPath = null;
+		client = new Client();
+		setupLinkedList();
+	}
+	public boolean noChunk(){
+		if (lastChunkHandle == null){ return true;}
+		return false;
+	}
+	private void setupLinkedList(){
+		firstRID = null;
+		lastRID = null;
+		//currentRID = null;		
+	}
+	public String makeRecordsList(){
+		RID cur = firstRID;
+		String ret = "";
+		while (cur != null){
+			ret = ret + cur.toString() + "\n";
+			cur = cur.next;
+		}
+		return ret.substring(0, ret.length()-1);
+	}
+	public void readAndApplyRecordsList(String input){
+		setupLinkedList();
+		String[] lines = input.split("\n");
+		for (int i = 0; i < lines.length; i++){
+			RID add = new RID(lines[i]);
+			addRecord(add);
+		}
+	}
+	public String newChunk(){
+		String newChunk = client.createChunk();
+		if (newChunk == null){ return null;}
+		//We need to put in code that determines which ChunkServer and which one-letter prefix goes here
+		//Right now it is hard-coded to "A"
+		lastChunkHandle = "A"+newChunk;
+		lastChunkBytesUsed = 0;
+		lastChunkNumRecords = 0;
+		return lastChunkHandle;
+	}
+	public int getRecordSize(RID r){
+		return r.length;
+	}
+	public String getPath(){ return myPath;}
+	public String getLastChunkHandle(){ return lastChunkHandle;}
+	public int getBytesUsedLastChunk(){ return lastChunkBytesUsed;}
+	public int freeBytesLastChunk(){
+		return chunkSize - lastChunkBytesUsed + 8 * lastChunkNumRecords;
+	}
+	public void changeChunk(String c){
+		//Incomplete
+		lastChunkHandle = c;
+	}
+	public void appendOperation(int size){
+		lastChunkBytesUsed+=size;
+	}
+	//public void setCurrentRID(RID r){ currentRID = r;}
+	public RID getFirstRID(){return firstRID;}
+	public RID getLastRID(){return lastRID;}
+	public void blankLinkedList(){
+		firstRID = null;
+		lastRID = null;
+	}
+	public void deleteFirstRecord(){
+		if (firstRID != null){
+			firstRID = firstRID.next;
+			firstRID.prior = null;
+		}
+	}
+	public void deleteLastRecord(){
+		if (lastRID != null){
+			lastRID = lastRID.prior;
+			lastRID.next = null;
+		}
+	}
+	void addRecord(RID r){
+		r.inLinkedList = true;
+		lastChunkBytesUsed+=r.length;
+		lastChunkNumRecords+=1;
+		if (firstRID == null){
+			firstRID = r;
+			lastRID = r;
+			return;
+		}
+		if (lastRID == firstRID){
+			r.prior = firstRID;
+			firstRID.next = r;
+			lastRID = r;
+			return;
+		}
+		lastRID.next = r;
+		r.prior = lastRID;
+		lastRID = r;
+		
+	}
+}
