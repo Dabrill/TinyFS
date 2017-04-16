@@ -40,8 +40,7 @@ public class Client implements ClientInterface {
 	protected DataOutputStream masterDos;
 	
 	public Client(){
-		clientCSConn = null;
-		clientMasterConn = null;
+		if ((clientCSConn != null) && (clientMasterConn != null)) return;
 		try {
 			clientMasterConn = new Socket(masterHostName, masterPort);
 			masterDos = new DataOutputStream(clientMasterConn.getOutputStream());
